@@ -10,14 +10,13 @@ import android.os.Message;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import g_ele.com.rdmanager.PedometerListener;
+import g_ele.com.rdmanager.listeners.LocationChangeListener;
+import g_ele.com.rdmanager.listeners.PedometerListener;
+import g_ele.com.rdmanager.listeners.StepChangeListener;
 
 import static g_ele.com.rdmanager.Constants.MODE_INDOOR;
-import static g_ele.com.rdmanager.Constants.MSG_CALORIE_CHANGE;
-import static g_ele.com.rdmanager.Constants.MSG_DISTANCE_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_DURATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_LOCATION_CHANGE;
-import static g_ele.com.rdmanager.Constants.MSG_PACE_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
 
 /**
@@ -25,13 +24,13 @@ import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
  * Created by aki on 1/9/2016.
  */
 
-class RDManager implements DataDelegate {
+class RDManager implements StepChangeListener, LocationChangeListener {
     public Integer duration = 0;
     public Double distance = 0.0;
     public Integer steps = 0;
-    public Double pace = 0.0;
     public Integer calorie = 0;
-    public Location location;
+    public Location oldLocation;
+    public Location newLocation;
 
     public Double userHeight = 1.7;
     public Double userWeight = 65.0;
@@ -60,31 +59,19 @@ class RDManager implements DataDelegate {
             if (delegate != null) {
                 switch (msg.what) {
                     case MSG_DURATION_CHANGE:
-                        delegate.durationChanged(duration);
-                        break;
-                    case MSG_DISTANCE_CHANGE:
-                        delegate.distanceChanged(distance);
+                        delegate.onDurationChanged(duration);
                         break;
                     case MSG_STEP_CHANGE:
-                        delegate.stepsChanged(steps);
-                        break;
-                    case MSG_PACE_CHANGE:
-                        delegate.paceChanged(pace);
-                        break;
-                    case MSG_CALORIE_CHANGE:
-                        delegate.calorieChanged(calorie);
+                        delegate.onStepChange(steps);
                         break;
                     case MSG_LOCATION_CHANGE:
-                        delegate.coordinateChanged(location);
+                        delegate.onLocationChanged(oldLocation, newLocation);
                         break;
                     default:
-                        delegate.durationChanged(duration);
-                        delegate.distanceChanged(distance);
-                        delegate.stepsChanged(steps);
-                        delegate.paceChanged(pace);
-                        delegate.calorieChanged(calorie);
-                        if (location != null) {
-                            delegate.coordinateChanged(location);
+                        delegate.onDurationChanged(duration);
+                        delegate.onStepChange(steps);
+                        if (mGpsManager != null) {
+                            delegate.onLocationChanged(oldLocation, newLocation);
                         }
                 }
             }
@@ -135,9 +122,9 @@ class RDManager implements DataDelegate {
             initGpsManager();
         }
         if (hasStepDetector()) {
-            initSCManager(!needGpsManager);
+            initSCManager();
         } else {
-            initACManager(!needGpsManager);
+            initACManager();
         }
     }
 
@@ -154,19 +141,14 @@ class RDManager implements DataDelegate {
         }
     }
 
-    private void initSCManager(boolean asDistanceManager) {
+    private void initSCManager() {
         if (mSCManager == null) {
             mSCManager = new SCManager(mContext);
             mSCManager.stepsDelegate = this;
         }
-        if (asDistanceManager) {
-            mSCManager.distanceDelegate = this;
-        } else {
-            mSCManager.distanceDelegate = null;
-        }
     }
 
-    private void initACManager(boolean asDistanceManager) {
+    private void initACManager() {
         if (mACManager == null) {
             mACManager = new ACManager(mContext);
             mACManager.userAge = userAge;
@@ -174,11 +156,6 @@ class RDManager implements DataDelegate {
             mACManager.userHeight = userHeight;
             mACManager.userWeight = userWeight;
             mACManager.stepsDelegate = this;
-        }
-        if (asDistanceManager) {
-            mACManager.distanceDelegate = this;
-        } else {
-            mACManager.distanceDelegate = null;
         }
     }
 
@@ -197,11 +174,7 @@ class RDManager implements DataDelegate {
             @Override
             public void run() {
                 duration += 1;
-                if (distance != 0) {
-                    pace = duration * (1000 / distance);
-                }
                 syncUIHandler.obtainMessage(MSG_DURATION_CHANGE).sendToTarget();
-                syncUIHandler.obtainMessage(MSG_PACE_CHANGE).sendToTarget();
             }
         };
         mTimer.schedule(tt, 0, 1000);
@@ -246,8 +219,6 @@ class RDManager implements DataDelegate {
         distance = 0.0;
         calorie = 0;
         steps = 0;
-        pace = 0.0;
-        location = null;
         syncUIHandler.obtainMessage().sendToTarget();
     }
 
@@ -259,29 +230,15 @@ class RDManager implements DataDelegate {
     }
 
     @Override
-    public void distanceChanged(Double distance) {
-        this.distance += distance;
-        if (this.distance != 0) {
-            this.pace = this.duration * (1000 / this.distance);
-            // https://www.zhihu.com/question/20354554
-            this.calorie = (int) (this.userWeight * this.distance * 1.036 / 1000);
-        }
-        syncUIHandler.obtainMessage(MSG_DISTANCE_CHANGE).sendToTarget();
-        if (this.distance != 0) {
-            syncUIHandler.obtainMessage(MSG_PACE_CHANGE).sendToTarget();
-            syncUIHandler.obtainMessage(MSG_CALORIE_CHANGE).sendToTarget();
-        }
-    }
-
-    @Override
-    public void stepsChanged(Integer steps) {
+    public void onStepChange(int steps) {
         this.steps += steps;
         syncUIHandler.obtainMessage(MSG_STEP_CHANGE).sendToTarget();
     }
 
     @Override
-    public void coordinateChanged(Location location) {
-        this.location = location;
+    public void onLocationChanged(Location oldLocation, Location newLocation) {
+        this.oldLocation = oldLocation;
+        this.newLocation = newLocation;
         syncUIHandler.obtainMessage(MSG_LOCATION_CHANGE).sendToTarget();
     }
 }

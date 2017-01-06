@@ -8,7 +8,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
+
+import g_ele.com.rdmanager.listeners.LocationChangeListener;
 
 /**
  * Using gps to record distance data
@@ -20,7 +21,7 @@ class GPSManager {
     private LocationListener mLocationListener;
     private Context mContext;
     private Location lastLocation;
-    DataDelegate delegate;
+    LocationChangeListener delegate;
     GPSManager(final Context context) {
         mContext = context;
         mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -31,17 +32,8 @@ class GPSManager {
                     // 忽略精度过低的数据
                     return;
                 }
-//                Log.d("location", "latitude:" + String.valueOf(location.getLatitude()) + " longtitude:" + String.valueOf(location.getLongitude()));
                 if (delegate != null) {
-                    delegate.coordinateChanged(location);
-                }
-                if (lastLocation == null) {
-                    lastLocation = location;
-                    return;
-                }
-                float distance = location.distanceTo(lastLocation);
-                if (delegate != null && distance != 0 && distance < 1000) {
-                    delegate.distanceChanged((double)distance);
+                    delegate.onLocationChanged(lastLocation, location);
                 }
                 lastLocation = location;
             }
@@ -74,4 +66,5 @@ class GPSManager {
             mLocationManager.removeUpdates(mLocationListener);
         }
     }
+
 }

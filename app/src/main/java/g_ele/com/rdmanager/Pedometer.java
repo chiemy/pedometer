@@ -14,14 +14,15 @@ import android.os.RemoteException;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import g_ele.com.rdmanager.helper.SCService;
+import g_ele.com.rdmanager.listeners.PedometerListener;
 
 import static android.content.Context.BIND_AUTO_CREATE;
-import static g_ele.com.rdmanager.Constants.MSG_CALORIE_CHANGE;
-import static g_ele.com.rdmanager.Constants.MSG_DISTANCE_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_DURATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_LOCATION_CHANGE;
-import static g_ele.com.rdmanager.Constants.MSG_PACE_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
 
 /**
@@ -36,37 +37,93 @@ public class Pedometer {
     public @interface Mode {
     }
 
-    private Handler syncUIHandler = new Handler() {
+    private static Pedometer instance = null;
+    private Context mContext;
+
+    private Config mConfig;
+
+    private boolean mIsRunning;
+
+    private List<PedometerListener> mPedometerListeners;
+
+    private Pedometer(Context context, Config config){
+        mContext = context.getApplicationContext();
+        mConfig = config;
+        mPedometerListeners = new ArrayList<>(2);
+    }
+
+    public static Pedometer getInstance(Context context, Config config) {
+        if (instance == null) {
+            synchronized (Pedometer.class) {
+                if (instance == null) {
+                    instance = new Pedometer(context, config);
+                }
+            }
+        }
+        return instance;
+    }
+
+    public void addDataChangeListener(PedometerListener listener) {
+        mPedometerListeners.add(listener);
+    }
+
+    public void removeDataChangeLisetener(PedometerListener listener) {
+        mPedometerListeners.remove(listener);
+    }
+
+    public void clearAllDataChangeLisetener() {
+        mPedometerListeners.clear();
+    }
+
+    public boolean isRunning() {
+        return mIsRunning;
+    }
+
+    private boolean bindService;
+    public void start() {
+        mIsRunning = true;
+        bindService();
+    }
+
+    private void bindService() {
+        Intent intent = new Intent(mContext, SCService.class);
+        intent.putExtras(mConfig.getData());
+        mContext.startService(intent);
+        if (!bindService) {
+            mContext.bindService(intent, mConnection, BIND_AUTO_CREATE);
+        }
+        bindService = true;
+    }
+
+    private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (delegate == null) {
-                return;
-            }
+            int size = mPedometerListeners.size();
             switch (msg.what) {
                 case MSG_DURATION_CHANGE:
-                    delegate.durationChanged(msg.arg1);
-                    break;
-                case MSG_DISTANCE_CHANGE:
-                    delegate.distanceChanged(msg.getData().getDouble(Constants.KEY_DATA));
+                    for (int i = 0; i < size; i++) {
+                        mPedometerListeners.get(i).onDurationChanged(msg.arg1);
+                    }
                     break;
                 case MSG_STEP_CHANGE:
-                    delegate.stepsChanged(msg.arg1);
-                    break;
-                case MSG_PACE_CHANGE:
-                    delegate.paceChanged(msg.getData().getDouble(Constants.KEY_DATA));
-                    break;
-                case MSG_CALORIE_CHANGE:
-                    delegate.calorieChanged(msg.arg1);
+                    for (int i = 0; i < size; i++) {
+                        mPedometerListeners.get(i).onStepChange(msg.arg1);
+                    }
                     break;
                 case MSG_LOCATION_CHANGE:
-                    delegate.coordinateChanged((Location) msg.obj);
+                    Bundle bundle = msg.getData();
+                    Location oldLocation = bundle.getParcelable("old_location");
+                    Location newLocation = bundle.getParcelable("new_location");
+                    for (int i = 0; i < size; i++) {
+                        mPedometerListeners.get(i).onLocationChanged(oldLocation, newLocation);
+                    }
                     break;
                 default:
             }
         }
     };
 
-    private Messenger mMessenger = new Messenger(syncUIHandler);
+    private Messenger mMessenger = new Messenger(mHandler);
     private Messenger mServiceMessenger;
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -112,54 +169,6 @@ public class Pedometer {
         return msg;
     }
 
-    private static Pedometer instance = null;
-    private Context mContext;
-
-    private PedometerListener delegate;
-    private Config mConfig;
-
-    private boolean mIsRunning;
-
-    private Pedometer(Context context, Config config){
-        mContext = context.getApplicationContext();
-        mConfig = config;
-    }
-
-    public static Pedometer getInstance(Context context, Config config) {
-        if (instance == null) {
-            synchronized (Pedometer.class) {
-                if (instance == null) {
-                    instance = new Pedometer(context, config);
-                }
-            }
-        }
-        return instance;
-    }
-
-    public void setDataChangeListener(PedometerListener listener) {
-        delegate = listener;
-    }
-
-    public boolean isRunning() {
-        return mIsRunning;
-    }
-
-    private boolean bindService;
-    public void start() {
-        mIsRunning = true;
-        bindService();
-    }
-
-    private void bindService() {
-        Intent intent = new Intent(mContext, SCService.class);
-        intent.putExtras(mConfig.getData());
-        mContext.startService(intent);
-        if (!bindService) {
-            mContext.bindService(intent, mConnection, BIND_AUTO_CREATE);
-        }
-        bindService = true;
-    }
-
     /**
      * 改变计步模式
      * @param mode {@link Constants#MODE_INDOOR} or {@link Constants#MODE_OUTDOOR}
@@ -184,7 +193,7 @@ public class Pedometer {
     public void release() {
         unbindService();
         instance = null;
-        delegate = null;
+        mPedometerListeners.clear();
     }
 
     private void unbindService() {
@@ -199,19 +208,19 @@ public class Pedometer {
 
     public static class Config {
         public static final String MODE = "mode";
-        public static final String WORK_IN_BG = "work_in_bg";
+        public static final String COUNT_STEP_IN_BG = "count_step_in_bg";
 
         private int mMode;
         private boolean mWorkInBackground;
 
         private Config(Builder builder) {
             mMode = builder.mMode;
-            mWorkInBackground = builder.mWorkInBackground;
+            mWorkInBackground = builder.mCountStepInBackground;
         }
 
         private Config(Bundle bundle) {
-            mMode = bundle.getInt(Pedometer.Config.MODE);
-            mWorkInBackground = bundle.getBoolean(Pedometer.Config.WORK_IN_BG);
+            mMode = bundle.getInt(MODE);
+            mWorkInBackground = bundle.getBoolean(COUNT_STEP_IN_BG);
         }
 
         public int getMode() {
@@ -225,7 +234,7 @@ public class Pedometer {
         public Bundle getData() {
             Bundle bundle = new Bundle(2);
             bundle.putInt(MODE, mMode);
-            bundle.putBoolean(WORK_IN_BG, mWorkInBackground);
+            bundle.putBoolean(COUNT_STEP_IN_BG, mWorkInBackground);
             return bundle;
         }
 
@@ -235,7 +244,8 @@ public class Pedometer {
 
         public static class Builder {
             private int mMode;
-            private boolean mWorkInBackground;
+            private boolean mCountStepInBackground;
+
             /**
              * 设置计步模式
              * @param mode {@link Constants#MODE_INDOOR} or {@link Constants#MODE_OUTDOOR}
@@ -246,11 +256,11 @@ public class Pedometer {
             }
 
             /**
-             * 是否后台运行(开机自启动)
-             * @param background
+             * 是否开启后台计步
+             * @param enable
              */
-            public Builder setWorkInBackground(boolean background) {
-                mWorkInBackground = background;
+            public Builder setCountStepInBackgroundEnable(boolean enable) {
+                mCountStepInBackground = enable;
                 return this;
             }
 

@@ -6,32 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import java.util.ArrayList;
-
-/**
- * Using accelerometer to record distance and steps
- * Created by aki on 1/9/2016.
- */
-
-class ACPoint {
-    private double x;
-    private double y;
-    private double z;
-
-    ACPoint(double x, double y, double z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    double absValue() {
-        return Math.sqrt(x * x + y * y + z * z);
-    }
-
-//    public ACPoint minus(ACPoint p) {
-//        return new ACPoint(p.x - this.x, p.y - this.y, p.z - this.z);
-//    }
-}
+import g_ele.com.rdmanager.listeners.StepChangeListener;
 
 class ACManager implements SensorEventListener {
     public Double userHeight = 0.0;
@@ -39,90 +14,86 @@ class ACManager implements SensorEventListener {
     public Integer userGender = 0; // 0 for female, 1 for male
     public Integer userAge = 0;
 
-    private ArrayList<Number> data;
-    private ArrayList<ACPoint> tempData;
-    private Integer tempStepCount;
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
 
-    DataDelegate distanceDelegate;
-    DataDelegate stepsDelegate;
+    private float mLimit = 10;
+    private float mLastValues[] = new float[3 * 2];
+    private float mScale[] = new float[2];
+    private float mYOffset;
+
+    private float mLastDirections[] = new float[3 * 2];
+    private float mLastExtremes[][] = {new float[3 * 2], new float[3 * 2]};
+    private float mLastDiff[] = new float[3 * 2];
+    private int mLastMatch = -1;
+
+    StepChangeListener stepsDelegate;
 
     ACManager(Context context) {
-        mSensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        initForNew();
     }
 
     void start() {
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        this.data = new ArrayList<>();
-        this.tempData = new ArrayList<>();
-        this.tempStepCount = 0;
     }
 
     void stop() {
         mSensorManager.unregisterListener(this);
-        this.data = null;
-        this.tempData = null;
-        this.tempStepCount = 0;
-    }
-
-    private double var() {
-        double var1 = 0;
-        double var2 = 0;
-        for (int i = 0; i < this.data.size(); i++) {
-            double v = this.data.get(i).doubleValue();
-            var1 += v * v;
-            var2 += v;
-        }
-        var1 = var1 / (double)(this.data.size());
-        var2 = var2 / (double)(this.data.size());
-        var2 = var2 * var2;
-        return var1 - var2;
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        double x = event.values[0];
-        double y = event.values[1];
-        double z = event.values[2];
-        double a = Math.sqrt(x * x + y * y + z * z);
-        this.data.add(a);
-        ACPoint point = new ACPoint(x, y, z);
-        this.tempData.add(point);
-        Integer count = this.tempData.size();
-        if (count >= 5) {
-            ACPoint p1 = this.tempData.get(count - 5);
-            ACPoint p2 = this.tempData.get(count - 4);
-            ACPoint p3 = this.tempData.get(count - 3);
-            ACPoint p4 = this.tempData.get(count - 2);
-            ACPoint p5 = this.tempData.get(count - 1);
+        stepChange(event);
+    }
 
-            if (p3.absValue() > p1.absValue() && p3.absValue() > p2.absValue() && p3.absValue() > p4.absValue() && p3.absValue() > p5.absValue()) {
-                this.tempStepCount += 1;
-                this.tempData.clear();
-                this.tempData.add(p4);
-                this.tempData.add(p5);
-            } else {
-                this.tempData.remove(0);
-            }
+    private void initForNew() {
+        int h = 480; // TODO: remove this constant
+        mYOffset = h * 0.5f;
+        mScale[0] = -(h * 0.5f * (1.0f / (SensorManager.STANDARD_GRAVITY * 2)));
+        mScale[1] = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
+    }
+
+    private void stepChange(SensorEvent event) {
+        float vSum = 0;
+        for (int i = 0; i < 3; i++) {
+            final float v = mYOffset + event.values[i] * mScale[1];
+            vSum += v;
         }
+        int k = 0;
+        float v = vSum / 3;
 
-        if (this.data.size() >= 30) {
-            double var = this.var();
-            if (var >= 0.02) {
-                if (this.distanceDelegate != null) {
-                    // TODO 更精确的步幅计算公式
-                    this.distanceDelegate.distanceChanged(this.tempStepCount * this.userHeight * 0.47);
+        float direction = (v > mLastValues[k] ? 1 : (v < mLastValues[k] ? -1 : 0));
+        if (direction == -mLastDirections[k]) {
+            // Direction changed
+            int extType = (direction > 0 ? 0 : 1); // minumum or maximum?
+            mLastExtremes[extType][k] = mLastValues[k];
+            float diff = Math.abs(mLastExtremes[extType][k] - mLastExtremes[1 - extType][k]);
+
+            if (diff > mLimit) {
+
+                boolean isAlmostAsLargeAsPrevious = diff > (mLastDiff[k] * 2 / 3);
+                boolean isPreviousLargeEnough = mLastDiff[k] > (diff / 3);
+                boolean isNotContra = (mLastMatch != 1 - extType);
+
+                if (isAlmostAsLargeAsPrevious && isPreviousLargeEnough && isNotContra) {
+                    onStep(1);
+                    mLastMatch = extType;
+                } else {
+                    mLastMatch = -1;
                 }
-                if (this.stepsDelegate != null) {
-                    this.stepsDelegate.stepsChanged(this.tempStepCount);
-                }
-                this.tempStepCount = 0;
-            } else {
-                this.tempStepCount = 0;
             }
-            this.data.clear();
+            mLastDiff[k] = diff;
+        }
+        mLastDirections[k] = direction;
+        mLastValues[k] = v;
+    }
+
+    private void onStep(int stepCount) {
+        if (this.stepsDelegate != null) {
+            this.stepsDelegate.onStepChange(stepCount);
         }
     }
 

@@ -16,7 +16,7 @@ import android.support.annotation.Nullable;
 
 import g_ele.com.rdmanager.Constants;
 import g_ele.com.rdmanager.Pedometer;
-import g_ele.com.rdmanager.PedometerListener;
+import g_ele.com.rdmanager.listeners.PedometerListener;
 
 import static g_ele.com.rdmanager.Constants.INIT;
 
@@ -119,6 +119,7 @@ public class SCService extends Service implements PedometerListener {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        mClientMessenger = null;
         return super.onUnbind(intent);
     }
 
@@ -149,49 +150,31 @@ public class SCService extends Service implements PedometerListener {
         return msg;
     }
 
-    private void sendInteger(Integer duration, int what) {
+    private void sendInteger(Integer value, int what) {
         Message msg = getMessage(what);
-        msg.arg1 = duration;
+        msg.arg1 = value;
         sendMessage(msg);
     }
 
-    private void sendDouble(Double pace, int what) {
-        Message msg = getMessage(what);
-        Bundle bundle = new Bundle(1);
-        bundle.putDouble(Constants.KEY_DATA, pace);
+    @Override
+    public void onDurationChanged(int duration) {
+        sendInteger(duration, Constants.MSG_DURATION_CHANGE);
+        // TODO 每隔一段时间保存一次数据
+    }
+
+    @Override
+    public void onLocationChanged(Location oldLocation, Location newLocation) {
+        Message msg = getMessage(Constants.MSG_LOCATION_CHANGE);
+        Bundle bundle = new Bundle(2);
+        bundle.putParcelable("old_location", oldLocation);
+        bundle.putParcelable("new_location", newLocation);
         msg.setData(bundle);
         sendMessage(msg);
     }
 
     @Override
-    public void durationChanged(Integer duration) {
-        sendInteger(duration, Constants.MSG_DURATION_CHANGE);
-    }
-
-    @Override
-    public void distanceChanged(Double distance) {
-        sendDouble(distance, Constants.MSG_DISTANCE_CHANGE);
-    }
-
-    @Override
-    public void stepsChanged(Integer steps) {
+    public void onStepChange(int steps) {
         sendInteger(steps, Constants.MSG_STEP_CHANGE);
     }
 
-    @Override
-    public void paceChanged(Double pace) {
-        sendDouble(pace, Constants.MSG_PACE_CHANGE);
-    }
-
-    @Override
-    public void calorieChanged(Integer calorie) {
-        sendInteger(calorie, Constants.MSG_CALORIE_CHANGE);
-    }
-
-    @Override
-    public void coordinateChanged(Location location) {
-        Message msg = getMessage(Constants.MSG_LOCATION_CHANGE);
-        msg.obj = location;
-        sendMessage(msg);
-    }
 }

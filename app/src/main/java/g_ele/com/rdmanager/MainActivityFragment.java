@@ -10,10 +10,15 @@ import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import g_ele.com.rdmanager.helper.SportAnalyser;
+import g_ele.com.rdmanager.listeners.AnalyserDataListener;
+
+import static g_ele.com.rdmanager.R.id.location;
+
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements PedometerListener {
+public class MainActivityFragment extends Fragment {
 
     private Pedometer rdManager;
 
@@ -35,11 +40,11 @@ public class MainActivityFragment extends Fragment implements PedometerListener 
         int defaultMode = Constants.MODE_INDOOR;
         Pedometer.Config config = new Pedometer.Config.Builder()
                 .setMode(defaultMode)
-                .setWorkInBackground(true)
+                .setCountStepInBackgroundEnable(true)
                 .build();
 
         rdManager = Pedometer.getInstance(getActivity(), config);
-        rdManager.setDataChangeListener(this);
+        rdManager.addDataChangeListener(mDataListener);
         rdManager.start();
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
@@ -48,7 +53,7 @@ public class MainActivityFragment extends Fragment implements PedometerListener 
         mStepsText = (TextView) view.findViewById(R.id.steps);
         mPaceText = (TextView) view.findViewById(R.id.pace);
         mCalorieText = (TextView) view.findViewById(R.id.calorie);
-        mLocationText = (TextView) view.findViewById(R.id.location);
+        mLocationText = (TextView) view.findViewById(location);
         mToggleButton = (Button) view.findViewById(R.id.toggleButton);
         mStopButton = (Button) view.findViewById(R.id.stopButton);
 
@@ -100,39 +105,39 @@ public class MainActivityFragment extends Fragment implements PedometerListener 
         rdManager.changeMode(mode);
     }
 
-    @Override
-    public void durationChanged(Integer duration) {
-        mDurationText.setText(duration.toString());
-    }
+    private AnalyserDataListener mDataListener = new AnalyserDataListener(new SportAnalyser.Builder().build()) {
+        @Override
+        public void onDurationChanged(int duration) {
+            super.onDurationChanged(duration);
+            mDurationText.setText(String.valueOf(duration));
+        }
 
-    @Override
-    public void distanceChanged(Double distance) {
-        mDistanceText.setText(distance.toString());
-    }
+        @Override
+        public void onStepChange(int steps) {
+            super.onStepChange(steps);
+            mStepsText.setText(String.valueOf(steps));
+        }
 
-    @Override
-    public void stepsChanged(Integer steps) {
-        mStepsText.setText(steps.toString());
-    }
+        @Override
+        public void onLocationChanged(Location oldLocation, Location newLocation) {
+            mLocationText.setText("latitude:" + String.valueOf(newLocation.getLatitude()) + " longtitude:" + String.valueOf(newLocation.getLongitude()));
+        }
 
-    @Override
-    public void paceChanged(Double pace) {
-        mPaceText.setText(pace.toString());
-    }
+        @Override
+        public void onCalorieChange(int calorie) {
+            mCalorieText.setText(String.valueOf(calorie));
+        }
 
-    @Override
-    public void calorieChanged(Integer calorie) {
-        mCalorieText.setText(calorie.toString());
-    }
-
-    @Override
-    public void coordinateChanged(Location location) {
-        mLocationText.setText("latitude:" + String.valueOf(location.getLatitude()) + " longtitude:" + String.valueOf(location.getLongitude()));
-    }
+        @Override
+        public void onDistanceChange(double distance) {
+            mDistanceText.setText(String.valueOf(distance));
+        }
+    };
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         rdManager.release();
     }
+
 }

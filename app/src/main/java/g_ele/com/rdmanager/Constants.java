@@ -10,10 +10,7 @@ public class Constants {
     public static final int INIT = 1;
 
     public static final int MSG_DURATION_CHANGE = 1;
-    public static final int MSG_DISTANCE_CHANGE = 2;
     public static final int MSG_STEP_CHANGE = 3;
-    public static final int MSG_PACE_CHANGE = 4;
-    public static final int MSG_CALORIE_CHANGE = 5;
     public static final int MSG_LOCATION_CHANGE = 6;
 
     public static final int MSG_STOP = 7;

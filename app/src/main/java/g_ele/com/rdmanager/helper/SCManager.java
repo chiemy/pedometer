@@ -7,6 +7,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 
+import g_ele.com.rdmanager.listeners.StepChangeListener;
+
 /**
  * Using Sensor to record distance and step data
  * Created by aki on 1/9/2016.
@@ -15,8 +17,7 @@ import android.os.Build;
 class SCManager implements SensorEventListener {
     private SensorManager mSensorManager;
     private Sensor mSensor;
-    DataDelegate distanceDelegate;
-    DataDelegate stepsDelegate;
+    StepChangeListener stepsDelegate;
 
     SCManager(Context context) {
         mSensorManager = (SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
@@ -36,11 +37,7 @@ class SCManager implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (stepsDelegate != null) {
-            stepsDelegate.stepsChanged(event.values.length);
-        }
-        if (distanceDelegate != null) {
-            // TODO: use user's weight and height
-            distanceDelegate.distanceChanged((double)event.values.length * 0.84);
+            stepsDelegate.onStepChange(event.values.length);
         }
     }
 
