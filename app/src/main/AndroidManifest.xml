@@ -56,7 +56,7 @@
             android:value="9447e60bfd333d8868f575b476d5a8af"/>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.activity.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"
@@ -66,6 +66,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.activity.OutDoorRunningActivity"
+            android:screenOrientation="portrait"
+            />
 
         <service
             android:name=".helper.SCService"

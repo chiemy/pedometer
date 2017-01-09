@@ -2,6 +2,7 @@ package g_ele.com.rdmanager.helper;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.location.LocationManager;
 
 import java.util.List;
 
@@ -36,5 +37,11 @@ public class Utils {
             }
         }
         return isWork;
+    }
+
+    public static boolean isGpsOpen(Context context){
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        //获得手机是不是设置了GPS开启状态true：gps开启，false：GPS未开启
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 }

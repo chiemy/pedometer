@@ -18,10 +18,13 @@ import com.amap.api.location.AMapLocation;
 import java.util.ArrayList;
 import java.util.List;
 
+import g_ele.com.rdmanager.helper.GPSManager;
 import g_ele.com.rdmanager.helper.SCService;
+import g_ele.com.rdmanager.listeners.LocationChangeListener;
 import g_ele.com.rdmanager.listeners.PedometerListener;
 
 import static android.content.Context.BIND_AUTO_CREATE;
+import static g_ele.com.rdmanager.Constants.MODE_OUTDOOR;
 import static g_ele.com.rdmanager.Constants.MSG_DURATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_LOCATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
@@ -32,7 +35,7 @@ import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
  * Description:
  */
 
-public class Pedometer {
+public class Pedometer implements LocationChangeListener {
 
     @IntDef({Constants.MODE_INDOOR, Constants.MODE_OUTDOOR})
     public @interface Mode {
@@ -46,6 +49,8 @@ public class Pedometer {
     private boolean mIsRunning;
 
     private List<PedometerListener> mPedometerListeners;
+
+    private GPSManager mGPSManager;
 
     private Pedometer(Context context, Config config){
         mContext = context.getApplicationContext();
@@ -74,16 +79,6 @@ public class Pedometer {
 
     public void clearAllDataChangeLisetener() {
         mPedometerListeners.clear();
-    }
-
-    public boolean isRunning() {
-        return mIsRunning;
-    }
-
-    private boolean bindService;
-    public void start() {
-        mIsRunning = true;
-        bindService();
     }
 
     private void bindService() {
@@ -171,31 +166,77 @@ public class Pedometer {
         return msg;
     }
 
+    public boolean isRunning() {
+        return mIsRunning;
+    }
+
+    private boolean bindService;
+    public void start() {
+        mIsRunning = true;
+        bindService();
+        locationIfNecessary();
+    }
+
+    public void stop() {
+        mIsRunning = false;
+        sendMessage(Constants.MSG_STOP);
+        stopLocation();
+    }
+
+    public void toggle() {
+        mIsRunning = !mIsRunning;
+        sendMessage(Constants.MSG_TOGGLE);
+        locationIfNecessary();
+    }
+
     /**
      * 改变计步模式
      * @param mode {@link Constants#MODE_INDOOR} or {@link Constants#MODE_OUTDOOR}
      */
     public void changeMode(@Mode int mode) {
         mConfig.mMode = mode;
-        Message msg = getMessage(Constants.MSG_CHANGE_MODE);
-        msg.setData(mConfig.getData());
-        sendMessage(msg);
+//        Message msg = getMessage(Constants.MSG_CHANGE_MODE);
+//        msg.setData(mConfig.getData());
+//        sendMessage(msg);
+        locationIfNecessary();
     }
 
-    public void stop() {
-        mIsRunning = false;
-        sendMessage(Constants.MSG_STOP);
+    private void locationIfNecessary() {
+        if (mConfig.mMode == MODE_OUTDOOR) {
+            startLocation();
+        } else {
+            stopLocation();
+        }
     }
 
-    public void toggle() {
-        mIsRunning = !mIsRunning;
-        sendMessage(Constants.MSG_TOGGLE);
+    private void stopLocation() {
+        if (mGPSManager != null) {
+            mGPSManager.stop();
+            mGPSManager = null;
+        }
+    }
+
+    private void startLocation() {
+        if (mGPSManager == null) {
+            mGPSManager = new GPSManager(mContext);
+            mGPSManager.setDelegate(this);
+        }
+        mGPSManager.start();
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
+        int size = mPedometerListeners.size();
+        for (int i = 0; i < size; i++) {
+            mPedometerListeners.get(i).onLocationChanged(oldLocation, newLocation);
+        }
     }
 
     public void release() {
         unbindService();
         instance = null;
         mPedometerListeners.clear();
+        stopLocation();
     }
 
     private void unbindService() {

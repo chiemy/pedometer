@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -18,11 +17,12 @@ import g_ele.com.rdmanager.listeners.LocationChangeListener;
  * Created by aki on 1/9/2016.
  */
 
-class GPSManager implements AMapLocationListener {
+public class GPSManager implements AMapLocationListener {
     private AMapLocationClient mLocationClient;
     private Context mContext;
-    LocationChangeListener delegate;
-    GPSManager(final Context context) {
+    private LocationChangeListener delegate;
+
+    public GPSManager(final Context context) {
         mContext = context;
         mLocationClient = new AMapLocationClient(context);
         //初始化定位参数
@@ -44,13 +44,17 @@ class GPSManager implements AMapLocationListener {
         mLocationClient.setLocationListener(this);
     }
 
-    void start() {
+    public void setDelegate(LocationChangeListener delegate) {
+        this.delegate = delegate;
+    }
+
+    public void start() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocationClient.startLocation();
         }
     }
 
-    void stop() {
+    public void stop() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocationClient.stopLocation();
             mLocationClient.onDestroy();

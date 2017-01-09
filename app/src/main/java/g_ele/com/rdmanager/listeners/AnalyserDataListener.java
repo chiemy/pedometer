@@ -28,11 +28,7 @@ public abstract class AnalyserDataListener implements PedometerListener {
 
     @Override
     public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
-        float distance = newLocation.distanceTo(oldLocation);
-        if (distance != 0 && distance < 1000) {
-            mDistance += distance;
-            distanceChange(mDistance);
-        }
+
     }
 
     @Override

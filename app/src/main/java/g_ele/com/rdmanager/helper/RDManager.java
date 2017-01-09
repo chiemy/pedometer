@@ -120,7 +120,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
         // mode = 2 => 室外模式
         boolean needGpsManager = mode != MODE_INDOOR;
         if (needGpsManager) {
-            initGpsManager();
+            // initGpsManager();
         }
         if (hasStepDetector()) {
             initSCManager();
@@ -138,7 +138,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     private void initGpsManager() {
         if (mGpsManager == null) {
             mGpsManager = new GPSManager(mContext);
-            mGpsManager.delegate = this;
+            mGpsManager.setDelegate(this);
         }
     }
 

@@ -1,7 +1,11 @@
-package g_ele.com.rdmanager;
+package g_ele.com.rdmanager.ui.fragment;
 
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +15,11 @@ import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
 
+import g_ele.com.rdmanager.Constants;
+import g_ele.com.rdmanager.Pedometer;
+import g_ele.com.rdmanager.R;
 import g_ele.com.rdmanager.helper.SportAnalyser;
+import g_ele.com.rdmanager.helper.Utils;
 import g_ele.com.rdmanager.listeners.AnalyserDataListener;
 
 import static g_ele.com.rdmanager.R.id.location;
@@ -38,7 +46,7 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        int defaultMode = Constants.MODE_INDOOR;
+        int defaultMode = Constants.MODE_OUTDOOR;
         Pedometer.Config config = new Pedometer.Config.Builder()
                 .setMode(defaultMode)
                 .setCountStepInBackgroundEnable(true)
@@ -46,7 +54,6 @@ public class MainActivityFragment extends Fragment {
 
         rdManager = Pedometer.getInstance(getActivity(), config);
         rdManager.addDataChangeListener(mDataListener);
-        rdManager.start();
 
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         mDurationText = (TextView) view.findViewById(R.id.duration);
@@ -103,7 +110,31 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void changeMode(int mode) {
-        rdManager.changeMode(mode);
+        if (mode == Constants.MODE_OUTDOOR) {
+            if (Utils.isGpsOpen(getActivity())) {
+                rdManager.changeMode(mode);
+            } else {
+                openGPS();
+            }
+        } else {
+            rdManager.changeMode(mode);
+        }
+    }
+
+    private static final int REQUEST_OPEN_GPS = 0;
+    private void openGPS() {
+        new AlertDialog.Builder(getActivity())
+                .setMessage("需要开启GPS")
+                .setPositiveButton("开启", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivityForResult(intent, REQUEST_OPEN_GPS);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .create()
+                .show();
     }
 
     private AnalyserDataListener mDataListener = new AnalyserDataListener(new SportAnalyser.Builder().build()) {
@@ -134,6 +165,16 @@ public class MainActivityFragment extends Fragment {
             mDistanceText.setText(String.valueOf(distance));
         }
     };
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_OPEN_GPS) {
+            if (Utils.isGpsOpen(getActivity())) {
+                changeMode(Constants.MODE_OUTDOOR);
+            }
+        }
+    }
 
     @Override
     public void onDestroy() {
