@@ -3,11 +3,13 @@ package g_ele.com.rdmanager.helper;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
+
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 
 import g_ele.com.rdmanager.listeners.LocationChangeListener;
 
@@ -16,55 +18,51 @@ import g_ele.com.rdmanager.listeners.LocationChangeListener;
  * Created by aki on 1/9/2016.
  */
 
-class GPSManager {
-    private LocationManager mLocationManager;
-    private LocationListener mLocationListener;
+class GPSManager implements AMapLocationListener {
+    private AMapLocationClient mLocationClient;
     private Context mContext;
-    private Location lastLocation;
     LocationChangeListener delegate;
     GPSManager(final Context context) {
         mContext = context;
-        mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        mLocationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                if (location.getAccuracy() > 30) {
-                    // 忽略精度过低的数据
-                    return;
-                }
-                if (delegate != null) {
-                    delegate.onLocationChanged(lastLocation, location);
-                }
-                lastLocation = location;
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-
-            }
-        };
+        mLocationClient = new AMapLocationClient(context);
+        //初始化定位参数
+        AMapLocationClientOption mLocationOption = new AMapLocationClientOption();
+        //设置定位模式为高精度模式，Battery_Saving为低功耗模式，Device_Sensors是仅设备模式
+        mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+        //设置是否返回地址信息（默认返回地址信息）
+        mLocationOption.setNeedAddress(false);
+        //设置是否只定位一次,默认为false
+        mLocationOption.setOnceLocation(false);
+        //设置是否强制刷新WIFI，默认为强制刷新
+        mLocationOption.setWifiActiveScan(true);
+        //设置是否允许模拟位置,默认为false，不允许模拟位置
+        mLocationOption.setMockEnable(false);
+        //设置定位间隔,单位毫秒,默认为2000ms
+        mLocationOption.setInterval(2000);
+        //给定位客户端对象设置定位参数
+        mLocationClient.setLocationOption(mLocationOption);
+        mLocationClient.setLocationListener(this);
     }
 
     void start() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, mLocationListener);
+            mLocationClient.startLocation();
         }
     }
 
     void stop() {
         if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLocationManager.removeUpdates(mLocationListener);
+            mLocationClient.stopLocation();
+            mLocationClient.onDestroy();
         }
     }
 
+    private AMapLocation oldLocation;
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (delegate != null) {
+            delegate.onLocationChanged(oldLocation, aMapLocation);
+            oldLocation = aMapLocation;
+        }
+    }
 }

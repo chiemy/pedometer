@@ -2,10 +2,11 @@ package g_ele.com.rdmanager.helper;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+
+import com.amap.api.location.AMapLocation;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -29,8 +30,8 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     public Double distance = 0.0;
     public Integer steps = 0;
     public Integer calorie = 0;
-    public Location oldLocation;
-    public Location newLocation;
+    public AMapLocation oldLocation;
+    public AMapLocation newLocation;
 
     public Double userHeight = 1.7;
     public Double userWeight = 65.0;
@@ -236,7 +237,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     }
 
     @Override
-    public void onLocationChanged(Location oldLocation, Location newLocation) {
+    public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
         this.oldLocation = oldLocation;
         this.newLocation = newLocation;
         syncUIHandler.obtainMessage(MSG_LOCATION_CHANGE).sendToTarget();

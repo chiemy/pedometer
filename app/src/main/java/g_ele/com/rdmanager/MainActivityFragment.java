@@ -1,6 +1,5 @@
 package g_ele.com.rdmanager;
 
-import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+
+import com.amap.api.location.AMapLocation;
 
 import g_ele.com.rdmanager.helper.SportAnalyser;
 import g_ele.com.rdmanager.listeners.AnalyserDataListener;
@@ -119,7 +120,7 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
-        public void onLocationChanged(Location oldLocation, Location newLocation) {
+        public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
             mLocationText.setText("latitude:" + String.valueOf(newLocation.getLatitude()) + " longtitude:" + String.valueOf(newLocation.getLongitude()));
         }
 

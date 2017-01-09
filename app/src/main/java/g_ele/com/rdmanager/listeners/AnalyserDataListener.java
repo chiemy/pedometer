@@ -1,6 +1,6 @@
 package g_ele.com.rdmanager.listeners;
 
-import android.location.Location;
+import com.amap.api.location.AMapLocation;
 
 import g_ele.com.rdmanager.helper.SportAnalyser;
 
@@ -27,7 +27,7 @@ public abstract class AnalyserDataListener implements PedometerListener {
     }
 
     @Override
-    public void onLocationChanged(Location oldLocation, Location newLocation) {
+    public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
         float distance = newLocation.distanceTo(oldLocation);
         if (distance != 0 && distance < 1000) {
             mDistance += distance;

@@ -3,7 +3,6 @@ package g_ele.com.rdmanager.helper;
 import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +12,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.amap.api.location.AMapLocation;
 
 import g_ele.com.rdmanager.Constants;
 import g_ele.com.rdmanager.Pedometer;
@@ -48,6 +49,7 @@ public class SCService extends Service implements PedometerListener {
                 case Constants.MSG_CHANGE_MODE:
                     getConfig(msg);
                     mRDManager.setMode(mConfig.getMode());
+                    mRDManager.start();
                     break;
             }
         }
@@ -76,6 +78,7 @@ public class SCService extends Service implements PedometerListener {
         if (intent != null) {
             mConfig = Pedometer.Config.create(intent.getExtras());
         }
+
         initManager();
         mRDManager.start();
         return START_STICKY;
@@ -163,7 +166,7 @@ public class SCService extends Service implements PedometerListener {
     }
 
     @Override
-    public void onLocationChanged(Location oldLocation, Location newLocation) {
+    public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
         Message msg = getMessage(Constants.MSG_LOCATION_CHANGE);
         Bundle bundle = new Bundle(2);
         bundle.putParcelable("old_location", oldLocation);

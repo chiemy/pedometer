@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -13,6 +12,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+
+import com.amap.api.location.AMapLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,8 +113,9 @@ public class Pedometer {
                     break;
                 case MSG_LOCATION_CHANGE:
                     Bundle bundle = msg.getData();
-                    Location oldLocation = bundle.getParcelable("old_location");
-                    Location newLocation = bundle.getParcelable("new_location");
+                    bundle.setClassLoader(mContext.getClassLoader());
+                    AMapLocation oldLocation = bundle.getParcelable("old_location");
+                    AMapLocation newLocation = bundle.getParcelable("new_location");
                     for (int i = 0; i < size; i++) {
                         mPedometerListeners.get(i).onLocationChanged(oldLocation, newLocation);
                     }
@@ -207,20 +209,24 @@ public class Pedometer {
     }
 
     public static class Config {
-        public static final String MODE = "mode";
-        public static final String COUNT_STEP_IN_BG = "count_step_in_bg";
+        private static final String MODE = "mode";
+        private static final String COUNT_STEP_IN_BG = "count_step_in_bg";
+        private static final String LOCATION_IN_BG = "location_in_bg";
 
         private int mMode;
         private boolean mWorkInBackground;
+        private boolean mLocationInBackground;
 
         private Config(Builder builder) {
             mMode = builder.mMode;
             mWorkInBackground = builder.mCountStepInBackground;
+            mLocationInBackground = builder.mLocationInBackground;
         }
 
         private Config(Bundle bundle) {
             mMode = bundle.getInt(MODE);
             mWorkInBackground = bundle.getBoolean(COUNT_STEP_IN_BG);
+            mLocationInBackground = bundle.getBoolean(LOCATION_IN_BG);
         }
 
         public int getMode() {
@@ -232,9 +238,10 @@ public class Pedometer {
         }
 
         public Bundle getData() {
-            Bundle bundle = new Bundle(2);
+            Bundle bundle = new Bundle(3);
             bundle.putInt(MODE, mMode);
             bundle.putBoolean(COUNT_STEP_IN_BG, mWorkInBackground);
+            bundle.putBoolean(LOCATION_IN_BG, mLocationInBackground);
             return bundle;
         }
 
@@ -245,6 +252,7 @@ public class Pedometer {
         public static class Builder {
             private int mMode;
             private boolean mCountStepInBackground;
+            private boolean mLocationInBackground;
 
             /**
              * 设置计步模式
@@ -261,6 +269,15 @@ public class Pedometer {
              */
             public Builder setCountStepInBackgroundEnable(boolean enable) {
                 mCountStepInBackground = enable;
+                return this;
+            }
+
+            /**
+             * 是否开启后台定位
+             * @return
+             */
+            public Builder setLocationInBackgroundEnable(boolean enable) {
+                mLocationInBackground = enable;
                 return this;
             }
 

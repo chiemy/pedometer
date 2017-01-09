@@ -1,6 +1,6 @@
 package g_ele.com.rdmanager.listeners;
 
-import android.location.Location;
+import com.amap.api.location.AMapLocation;
 
 /**
  * Created: chiemy
@@ -9,5 +9,6 @@ import android.location.Location;
  */
 
 public interface LocationChangeListener {
-    void onLocationChanged(Location oldLocation, Location newLocation);
+
+    void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation);
 }
