@@ -73,9 +73,6 @@ class RDManager implements StepChangeListener, LocationChangeListener {
                     case MSG_STEP_CHANGE:
                         delegate.onStepChange(steps);
                         break;
-                    case MSG_TODAY_STEP_CHANGE:
-                        delegate.onTodayStepChange(mTodaySteps);
-                        break;
                     case MSG_LOCATION_CHANGE:
                         delegate.onLocationChanged(oldLocation, newLocation);
                         break;
@@ -220,7 +217,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
         if (mSCManager != null) {
             mSCManager.stop();
         }
-        saveSteps();
+        // saveSteps();
     }
 
     public void release() {
@@ -250,12 +247,8 @@ class RDManager implements StepChangeListener, LocationChangeListener {
         syncUIHandler.obtainMessage(MSG_STEP_CHANGE).sendToTarget();
         if (WAIT_FOR_VALID_STEPS) {
             WAIT_FOR_VALID_STEPS = false;
-            saveSteps();
+            // saveSteps();
         }
-    }
-
-    @Override
-    public void onTodayStepChange(int steps) {
     }
 
     @Override

@@ -179,9 +179,4 @@ public class SCService extends Service implements PedometerListener {
         sendInteger(steps, Constants.MSG_STEP_CHANGE);
     }
 
-    @Override
-    public void onTodayStepChange(int steps) {
-        sendInteger(steps, Constants.MSG_TODAY_STEP_CHANGE);
-    }
-
 }

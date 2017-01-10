@@ -30,7 +30,6 @@ import static g_ele.com.rdmanager.Constants.MODE_OUTDOOR;
 import static g_ele.com.rdmanager.Constants.MSG_DURATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_LOCATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
-import static g_ele.com.rdmanager.Constants.MSG_TODAY_STEP_CHANGE;
 
 /**
  * Created: chiemy
@@ -110,11 +109,6 @@ public class Pedometer implements LocationChangeListener {
                 case MSG_STEP_CHANGE:
                     for (int i = 0; i < size; i++) {
                         mPedometerListeners.get(i).onStepChange(msg.arg1);
-                    }
-                    break;
-                case MSG_TODAY_STEP_CHANGE:
-                    for (int i = 0; i < size; i++) {
-                        mPedometerListeners.get(i).onTodayStepChange(msg.arg1);
                     }
                     break;
                 case MSG_LOCATION_CHANGE:
@@ -249,7 +243,7 @@ public class Pedometer implements LocationChangeListener {
      * 获取今天步数, 不随 onStepChange 方法而实时增加, 在暂停计步或退出计步后才会增加
      * @return
      */
-    public int getTodaySteps() {
+    private int getTodaySteps() {
         return Math.max(mDatabase.getSteps(Utils.getToday()), 0);
     }
 

@@ -8,7 +8,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.maps2d.model.LatLng;
@@ -126,11 +125,6 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         public void onStepChange(int steps) {
             super.onStepChange(steps);
             mStepsText.setText(String.valueOf(steps));
-        }
-
-        @Override
-        public void onTodayStepChange(int steps) {
-            Toast.makeText(OutDoorRunningActivity.this, String.valueOf(steps), Toast.LENGTH_LONG).show();
         }
 
         @Override
