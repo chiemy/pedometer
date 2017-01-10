@@ -162,7 +162,6 @@ public class SCService extends Service implements PedometerListener {
     @Override
     public void onDurationChanged(int duration) {
         sendInteger(duration, Constants.MSG_DURATION_CHANGE);
-        // TODO 每隔一段时间保存一次数据
     }
 
     @Override
@@ -178,6 +177,11 @@ public class SCService extends Service implements PedometerListener {
     @Override
     public void onStepChange(int steps) {
         sendInteger(steps, Constants.MSG_STEP_CHANGE);
+    }
+
+    @Override
+    public void onTodayStepChange(int steps) {
+        sendInteger(steps, Constants.MSG_TODAY_STEP_CHANGE);
     }
 
 }

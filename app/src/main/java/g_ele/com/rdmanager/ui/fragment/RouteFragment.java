@@ -8,7 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.amap.api.maps2d.MapView;
+import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps2d.model.MyLocationStyle;
 import com.amap.api.maps2d.model.PolylineOptions;
 
 import java.util.List;
@@ -32,6 +34,17 @@ public class RouteFragment extends BasicMapFragment {
     @Override
     protected MapView getMapView(View root) {
         return (MapView) root.findViewById(R.id.mapView);
+    }
+
+    @Override
+    protected MyLocationStyle getMyLocationStyle() {
+        // 自定义系统定位蓝点
+        MyLocationStyle myLocationStyle = new MyLocationStyle();
+        // 自定义定位蓝点图标
+        myLocationStyle.myLocationIcon(BitmapDescriptorFactory.fromResource(R.mipmap.gps_point));
+        myLocationStyle.strokeColor(0);
+        myLocationStyle.radiusFillColor(0);
+        return myLocationStyle;
     }
 
     @Override

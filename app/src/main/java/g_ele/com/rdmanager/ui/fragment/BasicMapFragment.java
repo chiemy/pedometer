@@ -3,7 +3,6 @@ package g_ele.com.rdmanager.ui.fragment;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -80,15 +79,16 @@ public abstract class BasicMapFragment extends Fragment implements LocationSourc
         setupLocationStyle();
     }
 
-    private void setupLocationStyle(){
+    private void setupLocationStyle() {
         MyLocationStyle myLocationStyle = getMyLocationStyle();
         // 将自定义的 myLocationStyle 对象添加到地图上
-        aMap.setMyLocationStyle(myLocationStyle);
+        if (myLocationStyle != null) {
+            aMap.setMyLocationStyle(myLocationStyle);
+        }
     }
 
     private static final int STROKE_COLOR = Color.argb(180, 3, 145, 255);
     private static final int FILL_COLOR = Color.argb(10, 0, 0, 180);
-    @NonNull
     protected MyLocationStyle getMyLocationStyle() {
         // 自定义系统定位蓝点
         MyLocationStyle myLocationStyle = new MyLocationStyle();
@@ -106,12 +106,12 @@ public abstract class BasicMapFragment extends Fragment implements LocationSourc
     @Override
     public void onLocationChanged(AMapLocation amapLocation) {
         if (mListener != null && amapLocation != null) {
-            if (amapLocation != null
-                    && amapLocation.getErrorCode() == 0) {
-                mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
+            if (amapLocation.getErrorCode() == 0) {
+                // 显示系统小蓝点
+                mListener.onLocationChanged(amapLocation);
                 aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
             } else {
-                String errText = "定位失败," + amapLocation.getErrorCode()+ ": " + amapLocation.getErrorInfo();
+                String errText = "定位失败," + amapLocation.getErrorCode()+ ":" + amapLocation.getErrorInfo();
                 Toast.makeText(getActivity(), errText, Toast.LENGTH_LONG).show();
             }
         }

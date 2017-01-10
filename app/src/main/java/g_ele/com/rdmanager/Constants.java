@@ -11,6 +11,7 @@ public class Constants {
 
     public static final int MSG_DURATION_CHANGE = 1;
     public static final int MSG_STEP_CHANGE = 3;
+    public static final int MSG_TODAY_STEP_CHANGE = 4;
     public static final int MSG_LOCATION_CHANGE = 6;
 
     public static final int MSG_STOP = 7;

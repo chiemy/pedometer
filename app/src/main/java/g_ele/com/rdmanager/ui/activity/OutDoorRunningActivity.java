@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.maps2d.model.LatLng;
@@ -36,6 +37,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
     }
 
     private static final int MIN_TRIGGER_DISTANCE = 5;
+    private static final int MAX_SPEED = 13;
 
     private TextView mDurationText;
     private TextView mDistanceText;
@@ -127,11 +129,16 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         }
 
         @Override
+        public void onTodayStepChange(int steps) {
+            Toast.makeText(OutDoorRunningActivity.this, String.valueOf(steps), Toast.LENGTH_LONG).show();
+        }
+
+        @Override
         public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
             if (oldLocation != null) {
                 // 计算距离, 单位m
                 float distance = oldLocation.distanceTo(newLocation);
-                if (distance >= MIN_TRIGGER_DISTANCE) {
+                if (isValidLocation(distance)) {
                     mCurrentRoute.add(new LatLng(newLocation.getLatitude(), newLocation.getLongitude()));
                 }
             } else if (newLocation != null) {
@@ -149,9 +156,14 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
 
         @Override
         public void onDistanceChange(double distance) {
-            // mDistanceText.setText(String.valueOf(distance));
+            mDistanceText.setText(String.valueOf(distance));
         }
     };
+
+    private boolean isValidLocation(float distance) {
+        return distance >= MIN_TRIGGER_DISTANCE
+                && distance <= MAX_SPEED * mPedometer.getLocationTiggerInterval();
+    }
 
     @Override
     public void onClick(View v) {
@@ -182,28 +194,28 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         }
     }
 
+    private List<List<LatLng>> fakeRoute = new ArrayList<>();
     @NonNull
     private List<List<LatLng>> fakeData() {
-        List<List<LatLng>> fakeRoute = new ArrayList<>();
         List<LatLng> latLngs = new ArrayList<>();
         fakeRoute.add(latLngs);
 
-        latLngs.add(new LatLng(39.99475,116.465957));
-        latLngs.add(new LatLng(39.99472,116.466262));
-        latLngs.add(new LatLng(39.994586,116.466445));
-        latLngs.add(new LatLng(39.994415,116.466522));
-        latLngs.add(new LatLng(39.99419,116.466522));
-        latLngs.add(new LatLng(39.993999,116.466552));
-        latLngs.add(new LatLng(39.993934,116.466392));
-        latLngs.add(new LatLng(39.993881,116.46627));
-        latLngs.add(new LatLng(39.993801,116.466171));
-        latLngs.add(new LatLng(39.993755,116.466041));
-        latLngs.add(new LatLng(39.993785,116.465827));
-        latLngs.add(new LatLng(39.993732,116.465736));
-        latLngs.add(new LatLng(39.993679,116.465698));
-        latLngs.add(new LatLng(39.993724,116.465614));
-        latLngs.add(new LatLng(39.993705,116.465423));
-        latLngs.add(new LatLng(39.993679,116.465278));
+        latLngs.add(new LatLng(39.99475, 116.465957));
+        latLngs.add(new LatLng(39.99472, 116.466262));
+        latLngs.add(new LatLng(39.994586, 116.466445));
+        latLngs.add(new LatLng(39.994415, 116.466522));
+        latLngs.add(new LatLng(39.99419, 116.466522));
+        latLngs.add(new LatLng(39.993999, 116.466552));
+        latLngs.add(new LatLng(39.993934, 116.466392));
+        latLngs.add(new LatLng(39.993881, 116.46627));
+        latLngs.add(new LatLng(39.993801, 116.466171));
+        latLngs.add(new LatLng(39.993755, 116.466041));
+        latLngs.add(new LatLng(39.993785, 116.465827));
+        latLngs.add(new LatLng(39.993732, 116.465736));
+        latLngs.add(new LatLng(39.993679, 116.465698));
+        latLngs.add(new LatLng(39.993724, 116.465614));
+        latLngs.add(new LatLng(39.993705, 116.465423));
+        latLngs.add(new LatLng(39.993679, 116.465278));
         return fakeRoute;
     }
 

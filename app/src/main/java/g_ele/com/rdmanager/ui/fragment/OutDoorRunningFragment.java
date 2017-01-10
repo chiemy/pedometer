@@ -90,6 +90,10 @@ public class OutDoorRunningFragment extends Fragment {
         }
 
         @Override
+        public void onTodayStepChange(int steps) {
+        }
+
+        @Override
         public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
             mLocationText.setText("latitude:" + String.valueOf(newLocation.getLatitude()) + " longtitude:" + String.valueOf(newLocation.getLongitude()));
         }

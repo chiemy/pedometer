@@ -19,6 +19,7 @@ import static g_ele.com.rdmanager.Constants.MODE_INDOOR;
 import static g_ele.com.rdmanager.Constants.MSG_DURATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_LOCATION_CHANGE;
 import static g_ele.com.rdmanager.Constants.MSG_STEP_CHANGE;
+import static g_ele.com.rdmanager.Constants.MSG_TODAY_STEP_CHANGE;
 
 /**
  * RDManager
@@ -29,6 +30,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     public Integer duration = 0;
     public Double distance = 0.0;
     public Integer steps = 0;
+
     public Integer calorie = 0;
     public AMapLocation oldLocation;
     public AMapLocation newLocation;
@@ -47,6 +49,12 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     private SCManager mSCManager;
     private PedometerListener delegate;
 
+    private Database mDatabase;
+    private static boolean WAIT_FOR_VALID_STEPS = false;
+
+    private int mTodaySteps;
+    private int mSavedSteps;
+
     /*
     * 1: duration
     * 2: distance
@@ -64,6 +72,9 @@ class RDManager implements StepChangeListener, LocationChangeListener {
                         break;
                     case MSG_STEP_CHANGE:
                         delegate.onStepChange(steps);
+                        break;
+                    case MSG_TODAY_STEP_CHANGE:
+                        delegate.onTodayStepChange(mTodaySteps);
                         break;
                     case MSG_LOCATION_CHANGE:
                         delegate.onLocationChanged(oldLocation, newLocation);
@@ -108,6 +119,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
 
     public void setContext(Context c) {
         mContext = c;
+        mDatabase = Database.getInstance(mContext);
     }
 
     public void setDelegate(PedometerListener d) {
@@ -170,6 +182,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
 
     public void start() {
         cancelTimer();
+        WAIT_FOR_VALID_STEPS = true;
         mTimer = new Timer();
         TimerTask tt = new TimerTask() {
             @Override
@@ -207,6 +220,7 @@ class RDManager implements StepChangeListener, LocationChangeListener {
         if (mSCManager != null) {
             mSCManager.stop();
         }
+        saveSteps();
     }
 
     public void release() {
@@ -234,6 +248,14 @@ class RDManager implements StepChangeListener, LocationChangeListener {
     public void onStepChange(int steps) {
         this.steps += steps;
         syncUIHandler.obtainMessage(MSG_STEP_CHANGE).sendToTarget();
+        if (WAIT_FOR_VALID_STEPS) {
+            WAIT_FOR_VALID_STEPS = false;
+            saveSteps();
+        }
+    }
+
+    @Override
+    public void onTodayStepChange(int steps) {
     }
 
     @Override
@@ -241,5 +263,20 @@ class RDManager implements StepChangeListener, LocationChangeListener {
         this.oldLocation = oldLocation;
         this.newLocation = newLocation;
         syncUIHandler.obtainMessage(MSG_LOCATION_CHANGE).sendToTarget();
+    }
+
+    private void saveSteps() {
+        if (steps > 0) {
+            int stepsChanged = steps - mSavedSteps;
+            mSavedSteps = steps;
+            int todaySavedSteps = mDatabase.getSteps(Utils.getToday());
+            if (todaySavedSteps == Integer.MIN_VALUE) {
+                mDatabase.insertNewDay(Utils.getToday(), steps);
+            } else {
+                mDatabase.addToLastEntry(stepsChanged);
+            }
+            mTodaySteps = todaySavedSteps + stepsChanged;
+            syncUIHandler.obtainMessage(MSG_TODAY_STEP_CHANGE).sendToTarget();
+        }
     }
 }

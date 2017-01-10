@@ -4,6 +4,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.location.LocationManager;
 
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -43,5 +44,18 @@ public class Utils {
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         //获得手机是不是设置了GPS开启状态true：gps开启，false：GPS未开启
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    /**
+     * @return milliseconds since 1.1.1970 for today 0:00:00 local timezone
+     */
+    public static long getToday() {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis();
     }
 }
