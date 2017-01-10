@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocation;
-import com.amap.api.maps2d.model.LatLng;
+import com.amap.api.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.List;

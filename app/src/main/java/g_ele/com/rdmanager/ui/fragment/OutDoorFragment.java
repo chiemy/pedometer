@@ -7,8 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.maps2d.LocationSource;
-import com.amap.api.maps2d.MapView;
+import com.amap.api.maps.LocationSource;
+import com.amap.api.maps.MapView;
 
 import g_ele.com.rdmanager.R;
 

@@ -7,9 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.amap.api.maps2d.MapView;
-import com.amap.api.maps2d.model.LatLng;
-import com.amap.api.maps2d.model.PolylineOptions;
+import com.amap.api.maps.MapView;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.PolylineOptions;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class RouteFragment extends BasicMapFragment {
 
     @Override
     protected boolean isOnceLocation() {
-        return true;
+        return false;
     }
 
     public void setRoute(List<List<LatLng>> route) {
@@ -48,7 +48,6 @@ public class RouteFragment extends BasicMapFragment {
                         .width(10)
                         .color(Color.RED));
             }
-
         }
     }
 }
