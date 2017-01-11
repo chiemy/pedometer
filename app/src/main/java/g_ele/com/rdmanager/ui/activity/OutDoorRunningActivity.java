@@ -3,7 +3,6 @@ package g_ele.com.rdmanager.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -16,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import g_ele.com.rdmanager.Constants;
+import g_ele.com.rdmanager.DataSimulator;
 import g_ele.com.rdmanager.Pedometer;
 import g_ele.com.rdmanager.R;
 import g_ele.com.rdmanager.helper.SportAnalyser;
@@ -35,7 +35,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         context.startActivity(intent);
     }
 
-    private static final int MIN_TRIGGER_DISTANCE = 5;
+    private static final int MIN_TRIGGER_DISTANCE = 1;
     private static final int MAX_SPEED = 13;
 
     private TextView mDurationText;
@@ -64,6 +64,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         initView();
         mRoute = new ArrayList<>(5);
         start();
+        DataSimulator.clear();
     }
 
     private void start() {
@@ -134,6 +135,12 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
 
         @Override
         public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
+            // TODO 根据定位精度决定是否绘制
+            // 获取定位精度, 单位:米
+            // newLocation.getAccuracy();
+            // 获取卫星信号强度，仅在gps定位时有效,值为#GPS_ACCURACY_BAD，#GPS_ACCURACY_GOOD，#GPS_ACCURACY_UNKNOWN
+            // newLocation.getGpsAccuracyStatus();
+
             if (oldLocation != null) {
                 // 计算距离, 单位m
                 float distance = oldLocation.distanceTo(newLocation);
@@ -161,7 +168,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
 
     private boolean isValidLocation(float distance) {
         return distance >= MIN_TRIGGER_DISTANCE
-                && distance <= MAX_SPEED * mPedometer.getLocationTiggerInterval();
+                && distance <= MAX_SPEED * mPedometer.getLocationTriggerInterval();
     }
 
     @Override
@@ -182,7 +189,8 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
                     mIsMapShowing = false;
                     transaction.hide(mRouteFragment);
                 } else {
-                    mRouteFragment.setRoute(fakeData());
+                    // mRouteFragment.clear();
+                    mRouteFragment.setRoute(DataSimulator.getSimulateData());
                     mRouteFragment.setRoute(mRoute);
 
                     mIsMapShowing = true;
@@ -191,31 +199,6 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
                 transaction.commit();
                 break;
         }
-    }
-
-    private List<List<LatLng>> fakeRoute = new ArrayList<>();
-    @NonNull
-    private List<List<LatLng>> fakeData() {
-        List<LatLng> latLngs = new ArrayList<>();
-        fakeRoute.add(latLngs);
-
-        latLngs.add(new LatLng(39.99475, 116.465957));
-        latLngs.add(new LatLng(39.99472, 116.466262));
-        latLngs.add(new LatLng(39.994586, 116.466445));
-        latLngs.add(new LatLng(39.994415, 116.466522));
-        latLngs.add(new LatLng(39.99419, 116.466522));
-        latLngs.add(new LatLng(39.993999, 116.466552));
-        latLngs.add(new LatLng(39.993934, 116.466392));
-        latLngs.add(new LatLng(39.993881, 116.46627));
-        latLngs.add(new LatLng(39.993801, 116.466171));
-        latLngs.add(new LatLng(39.993755, 116.466041));
-        latLngs.add(new LatLng(39.993785, 116.465827));
-        latLngs.add(new LatLng(39.993732, 116.465736));
-        latLngs.add(new LatLng(39.993679, 116.465698));
-        latLngs.add(new LatLng(39.993724, 116.465614));
-        latLngs.add(new LatLng(39.993705, 116.465423));
-        latLngs.add(new LatLng(39.993679, 116.465278));
-        return fakeRoute;
     }
 
     @Override

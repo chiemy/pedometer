@@ -227,7 +227,7 @@ public class Pedometer implements LocationChangeListener {
         mGPSManager.start();
     }
 
-    public long getLocationTiggerInterval() {
+    public long getLocationTriggerInterval() {
         return mConfig.mInterval;
     }
 

@@ -75,11 +75,10 @@ public abstract class BasicMapFragment extends Fragment implements LocationSourc
         aMap.setMapType(AMap.MAP_TYPE_NORMAL);// 卫星地图模式
         aMap.setMyLocationEnabled(true);
 
-        setupLocationStyle();
+        setupLocationStyle(getMyLocationStyle());
     }
 
-    private void setupLocationStyle() {
-        MyLocationStyle myLocationStyle = getMyLocationStyle();
+    private void setupLocationStyle(MyLocationStyle myLocationStyle) {
         // 将自定义的 myLocationStyle 对象添加到地图上
         if (myLocationStyle != null) {
             aMap.setMyLocationStyle(myLocationStyle);

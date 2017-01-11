@@ -49,7 +49,13 @@ public class RouteFragment extends BasicMapFragment {
 
     @Override
     protected boolean isOnceLocation() {
-        return true;
+        return false;
+    }
+
+    public void clear() {
+        if (getaMap() != null) {
+            getaMap().clear();
+        }
     }
 
     public void setRoute(List<List<LatLng>> route) {
@@ -61,7 +67,6 @@ public class RouteFragment extends BasicMapFragment {
                         .width(10)
                         .color(Color.RED));
             }
-
         }
     }
 }
