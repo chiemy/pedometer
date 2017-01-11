@@ -24,8 +24,8 @@ public abstract class AnalyserDataListener implements PedometerListener {
     }
 
     @Override
-    public void onDurationChanged(int duration) {
-        mDuration = duration;
+    public void onDurationChanged(int seconds) {
+        mDuration = seconds;
         if (mDuration - mPaceTriggerDuration >= PACE_TRIGGER_INTERVAL) {
             mPaceTriggerDuration = mDuration;
             paceChange();
@@ -56,5 +56,5 @@ public abstract class AnalyserDataListener implements PedometerListener {
 
     public abstract void onCalorieChange(float calorie);
 
-    public abstract void onDistanceChange(float distance);
+    public abstract void onDistanceChange(float meters);
 }

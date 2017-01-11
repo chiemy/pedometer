@@ -73,4 +73,10 @@ public class Utils {
                 getConnectivityManager(context).getActiveNetworkInfo();
         return networkInfo != null && networkInfo.isAvailable();
     }
+
+    public static String getFormatPace(float second) {
+        int minutes = (int) (second / 60);
+        int seconds = (int) (second % 60);
+        return String.format("%d'%d''", minutes, seconds);
+    }
 }

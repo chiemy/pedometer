@@ -3,10 +3,13 @@ package g_ele.com.rdmanager.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.maps2d.model.LatLng;
@@ -19,8 +22,11 @@ import g_ele.com.rdmanager.DataSimulator;
 import g_ele.com.rdmanager.Pedometer;
 import g_ele.com.rdmanager.R;
 import g_ele.com.rdmanager.helper.SportAnalyser;
+import g_ele.com.rdmanager.helper.Utils;
 import g_ele.com.rdmanager.listeners.AnalyserDataListener;
 import g_ele.com.rdmanager.ui.fragment.RouteFragment;
+
+import static g_ele.com.rdmanager.R.id.distance;
 
 /**
  * Created: chiemy
@@ -29,10 +35,51 @@ import g_ele.com.rdmanager.ui.fragment.RouteFragment;
  */
 
 public class OutDoorRunningActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String EXTRA_TARGET_TIME = "target_time";
+    private static final String EXTRA_TARGET_DISTANCE = "target_distance";
 
-    public static void start(Context context) {
-        Intent intent = new Intent(context, OutDoorRunningActivity.class);
+    /**
+     * 开始自由训练
+     * @param context
+     */
+    public static void startForFree(Context context) {
+        Intent intent = getIntent(context);
         context.startActivity(intent);
+    }
+
+    /**
+     * 开始目标时间训练
+     * @param context
+     * @param targetTimeInSecond
+     */
+    public static void startForTargetTime(Context context, long targetTimeInSecond) {
+        if (targetTimeInSecond <= 0) {
+            Toast.makeText(context, "目标时间必须大于0", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent intent = getIntent(context);
+        intent.putExtra(EXTRA_TARGET_TIME, targetTimeInSecond);
+        context.startActivity(intent);
+    }
+
+    /**
+     * 开始目标距离训练
+     * @param context
+     * @param targetDistanceInKM
+     */
+    public static void startForTargetDistance(Context context, float targetDistanceInKM) {
+        if (targetDistanceInKM <= 0) {
+            Toast.makeText(context, "目标距离必须大于0", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent intent = getIntent(context);
+        intent.putExtra(EXTRA_TARGET_DISTANCE, targetDistanceInKM);
+        context.startActivity(intent);
+    }
+
+    @NonNull
+    private static Intent getIntent(Context context) {
+        return new Intent(context, OutDoorRunningActivity.class);
     }
 
     private static final int MIN_TRIGGER_DISTANCE = 1;
@@ -56,10 +103,16 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
     private RouteFragment mRouteFragment;
     private boolean mIsMapShowing;
 
+    private long mTargetTimeInSecond;
+    private float mTargetDistanceInMeter;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_outdoor_running);
+        mTargetTimeInSecond = getIntent().getLongExtra(EXTRA_TARGET_TIME, 0);
+        mTargetDistanceInMeter = getIntent().getFloatExtra(EXTRA_TARGET_DISTANCE, 0) * 1000;
+
         initPedometer();
         initView();
         mRoute = new ArrayList<>(5);
@@ -96,7 +149,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
 
     private void initView() {
         mDurationText = (TextView) findViewById(R.id.duration);
-        mDistanceText = (TextView) findViewById(R.id.distance);
+        mDistanceText = (TextView) findViewById(distance);
         mStepsText = (TextView) findViewById(R.id.steps);
         mPaceText = (TextView) findViewById(R.id.pace);
         mCalorieText = (TextView) findViewById(R.id.calorie);
@@ -120,6 +173,9 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         public void onDurationChanged(int duration) {
             super.onDurationChanged(duration);
             mDurationText.setText(String.valueOf(duration));
+            if (ifAchieveTargetTime(duration)) {
+                onAchieveTargetTime();
+            }
         }
 
         @Override
@@ -130,7 +186,7 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
 
         @Override
         public void onPaceChanged(float pace) {
-            mPaceText.setText(String.valueOf(pace));
+            mPaceText.setText(Utils.getFormatPace(pace));
         }
 
         @Override
@@ -161,10 +217,39 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         }
 
         @Override
-        public void onDistanceChange(float distance) {
-            mDistanceText.setText(String.valueOf(distance));
+        public void onDistanceChange(float meters) {
+            mDistanceText.setText(String.valueOf(meters) + " m");
+            if (ifAchieveTargetDistance(meters)) {
+                onAchieveTargetDistance();
+            }
         }
     };
+
+    private boolean ifAchieveTargetTime(int duration) {
+        return mTargetTimeInSecond != 0
+                && duration >= mTargetTimeInSecond;
+    }
+
+    private void onAchieveTargetTime() {
+        new AlertDialog.Builder(this)
+                .setMessage("已达成训练时长")
+                .setPositiveButton("确定", null)
+                .show();
+        stop();
+    }
+
+    private void onAchieveTargetDistance() {
+        new AlertDialog.Builder(this)
+                .setMessage("已达成训练距离")
+                .setPositiveButton("确定", null)
+                .show();
+        stop();
+    }
+
+    private boolean ifAchieveTargetDistance(float distance) {
+        return mTargetDistanceInMeter > 0
+                && distance >= mTargetDistanceInMeter;
+    }
 
     private boolean isValidLocation(float distance) {
         return distance >= MIN_TRIGGER_DISTANCE
@@ -207,4 +292,17 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         mPedometer.release();
     }
 
+    private Toast toast;
+    @Override
+    public void onBackPressed() {
+        if (mPedometer.isRunning()) {
+            if (toast != null && toast.getView().isShown()) {
+                return;
+            }
+            toast = Toast.makeText(this, "请先暂停训练", Toast.LENGTH_SHORT);
+            toast.show();
+            return;
+        }
+        super.onBackPressed();
+    }
 }
