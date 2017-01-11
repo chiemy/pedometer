@@ -128,6 +128,11 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         }
 
         @Override
+        public void onPaceChanged(float pace) {
+            mPaceText.setText(String.valueOf(pace));
+        }
+
+        @Override
         public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
             if (oldLocation != null) {
                 // 计算距离, 单位m
@@ -144,12 +149,12 @@ public class OutDoorRunningActivity extends AppCompatActivity implements View.On
         }
 
         @Override
-        public void onCalorieChange(int calorie) {
+        public void onCalorieChange(float calorie) {
             mCalorieText.setText(String.valueOf(calorie));
         }
 
         @Override
-        public void onDistanceChange(double distance) {
+        public void onDistanceChange(float distance) {
             mDistanceText.setText(String.valueOf(distance));
         }
     };

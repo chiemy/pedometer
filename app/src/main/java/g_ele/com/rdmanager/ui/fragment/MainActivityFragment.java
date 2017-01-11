@@ -22,6 +22,7 @@ import g_ele.com.rdmanager.helper.SportAnalyser;
 import g_ele.com.rdmanager.helper.Utils;
 import g_ele.com.rdmanager.listeners.AnalyserDataListener;
 
+import static g_ele.com.rdmanager.R.id.calorie;
 import static g_ele.com.rdmanager.R.id.location;
 
 /**
@@ -60,7 +61,7 @@ public class MainActivityFragment extends Fragment {
         mDistanceText = (TextView) view.findViewById(R.id.distance);
         mStepsText = (TextView) view.findViewById(R.id.steps);
         mPaceText = (TextView) view.findViewById(R.id.pace);
-        mCalorieText = (TextView) view.findViewById(R.id.calorie);
+        mCalorieText = (TextView) view.findViewById(calorie);
         mLocationText = (TextView) view.findViewById(location);
         mToggleButton = (Button) view.findViewById(R.id.toggleButton);
         mStopButton = (Button) view.findViewById(R.id.stopButton);
@@ -122,6 +123,7 @@ public class MainActivityFragment extends Fragment {
     }
 
     private static final int REQUEST_OPEN_GPS = 0;
+
     private void openGPS() {
         new AlertDialog.Builder(getActivity())
                 .setMessage("需要开启GPS")
@@ -145,9 +147,19 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
+        public void onPaceChanged(float pace) {
+
+        }
+
+        @Override
         public void onStepChange(int steps) {
             super.onStepChange(steps);
             mStepsText.setText(String.valueOf(steps));
+        }
+
+        @Override
+        public void onCalorieChange(float calorie) {
+            mCalorieText.setText(String.valueOf(calorie));
         }
 
         @Override
@@ -156,12 +168,7 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
-        public void onCalorieChange(int calorie) {
-            mCalorieText.setText(String.valueOf(calorie));
-        }
-
-        @Override
-        public void onDistanceChange(double distance) {
+        public void onDistanceChange(float distance) {
             mDistanceText.setText(String.valueOf(distance));
         }
     };

@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -112,7 +111,7 @@ public abstract class BasicMapFragment extends Fragment implements LocationSourc
                 aMap.moveCamera(CameraUpdateFactory.zoomTo(18));
             } else {
                 String errText = "定位失败," + amapLocation.getErrorCode()+ ":" + amapLocation.getErrorInfo();
-                Toast.makeText(getActivity(), errText, Toast.LENGTH_LONG).show();
+                Log.d("BasicMapFragment", "onLocationChanged: " + errText);
             }
         }
     }
@@ -156,7 +155,6 @@ public abstract class BasicMapFragment extends Fragment implements LocationSourc
         // 设置为true时，会等待GPS定位结果返回，最多等待30秒，若30秒后仍无GPS结果返回，返回网络定位结果
         // locationClientOption.setGpsFirst(true);
 
-        // 设置为高精度定位模式
         locationClientOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
     }
 

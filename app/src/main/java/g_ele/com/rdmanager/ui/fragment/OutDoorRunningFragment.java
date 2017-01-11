@@ -84,9 +84,19 @@ public class OutDoorRunningFragment extends Fragment {
         }
 
         @Override
+        public void onPaceChanged(float pace) {
+
+        }
+
+        @Override
         public void onStepChange(int steps) {
             super.onStepChange(steps);
             mStepsText.setText(String.valueOf(steps));
+        }
+
+        @Override
+        public void onCalorieChange(float calorie) {
+            mCalorieText.setText(String.valueOf(calorie));
         }
 
         @Override
@@ -95,12 +105,7 @@ public class OutDoorRunningFragment extends Fragment {
         }
 
         @Override
-        public void onCalorieChange(int calorie) {
-            mCalorieText.setText(String.valueOf(calorie));
-        }
-
-        @Override
-        public void onDistanceChange(double distance) {
+        public void onDistanceChange(float distance) {
             mDistanceText.setText(String.valueOf(distance));
         }
     };

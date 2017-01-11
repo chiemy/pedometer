@@ -26,9 +26,9 @@ public class SportAnalyser {
      * @param steps
      * @return
      */
-    public double getStepDistance(int steps) {
+    public float getStepDistance(int steps) {
         // TODO use user's weight and height
-        return steps * 0.84;
+        return steps * 0.84f;
     }
 
     /**
@@ -36,17 +36,17 @@ public class SportAnalyser {
      * @param steps
      * @return
      */
-    public int getCalorieForStep(int steps) {
+    public float getCalorieForStep(int steps) {
         return getCalorieForDistance(getStepDistance(steps));
     }
 
     /**
      * 计算步行消耗卡路里
-     * @param distance 单位 m
+     * @paratance 单位 m
      * @return
      */
-    public int getCalorieForDistance(double distance) {
-        return (int) (this.mWeight * distance * 1.036 / 1000);
+    public float getCalorieForDistance(double distance) {
+        return (float) (this.mWeight * distance * 1.036 / 1000);
     }
 
     public static final class Builder {

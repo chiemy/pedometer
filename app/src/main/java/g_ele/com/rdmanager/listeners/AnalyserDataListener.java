@@ -1,7 +1,5 @@
 package g_ele.com.rdmanager.listeners;
 
-import com.amap.api.location.AMapLocation;
-
 import g_ele.com.rdmanager.helper.SportAnalyser;
 
 /**
@@ -11,8 +9,11 @@ import g_ele.com.rdmanager.helper.SportAnalyser;
  */
 
 public abstract class AnalyserDataListener implements PedometerListener {
+    private static final int PACE_TRIGGER_INTERVAL = 3;
     private SportAnalyser mSportAnalyser;
-    private double mDistance;
+    private int mDuration;
+    private int mPaceTriggerDuration;
+    private float mDistance;
 
     /**
      * @see SportAnalyser
@@ -24,11 +25,11 @@ public abstract class AnalyserDataListener implements PedometerListener {
 
     @Override
     public void onDurationChanged(int duration) {
-    }
-
-    @Override
-    public void onLocationChanged(AMapLocation oldLocation, AMapLocation newLocation) {
-
+        mDuration = duration;
+        if (mDuration - mPaceTriggerDuration >= PACE_TRIGGER_INTERVAL) {
+            mPaceTriggerDuration = mDuration;
+            paceChange();
+        }
     }
 
     @Override
@@ -36,12 +37,24 @@ public abstract class AnalyserDataListener implements PedometerListener {
         distanceChange(mSportAnalyser.getStepDistance(steps));
     }
 
-    private void distanceChange(double distance) {
+    private void distanceChange(float distance) {
+        mDistance = distance;
+        paceChange();
         onCalorieChange(mSportAnalyser.getCalorieForDistance(distance));
         onDistanceChange(distance);
     }
 
-    public abstract void onCalorieChange(int calorie);
+    private void paceChange() {
+        float pace = 0;
+        if (mDistance > 0) {
+            pace = 1000 * mDuration / mDistance;
+        }
+        onPaceChanged(pace);
+    }
 
-    public abstract void onDistanceChange(double distance);
+    public abstract void onPaceChanged(float pace);
+
+    public abstract void onCalorieChange(float calorie);
+
+    public abstract void onDistanceChange(float distance);
 }

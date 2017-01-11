@@ -3,6 +3,8 @@ package g_ele.com.rdmanager.helper;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import java.util.Calendar;
 import java.util.List;
@@ -57,5 +59,18 @@ public class Utils {
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
         return c.getTimeInMillis();
+    }
+
+    public static ConnectivityManager getConnectivityManager(Context context) {
+        return (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    }
+
+    /**
+     * @return 网络是否连接并可用(在切换网络状态时, 无法立即返回正确地结果)
+     */
+    public static boolean isNetworkConnected(Context context) {
+        NetworkInfo networkInfo =
+                getConnectivityManager(context).getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isAvailable();
     }
 }

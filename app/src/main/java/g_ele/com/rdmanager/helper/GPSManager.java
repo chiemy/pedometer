@@ -32,7 +32,7 @@ public class GPSManager implements AMapLocationListener {
     private AMapLocationClientOption initAMapLocationClientOption() {
         //初始化定位参数
         AMapLocationClientOption locationOption = new AMapLocationClientOption();
-        //设置定位模式为高精度模式，Battery_Saving为低功耗模式，Device_Sensors是仅设备模式
+        // 设置定位模式为高精度模式，Battery_Saving为低功耗模式，Device_Sensors是仅设备模式
         locationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         //设置是否返回地址信息（默认返回地址信息）
         locationOption.setNeedAddress(false);
